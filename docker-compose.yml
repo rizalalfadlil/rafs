@@ -1,0 +1,25 @@
+services:
+  web:
+    build: .
+    ports:
+      - "8080:8080"
+    container_name: go-server-container
+    volumes:
+      - ./www:/app/www # Menyambungkan folder lokal ./www ke folder /app/www di dalam container
+    depends_on:
+      - db
+
+  db:
+    image: postgres:15-alpine
+    container_name: postgres-db-container
+    environment:
+      POSTGRES_USER: superadmin
+      POSTGRES_PASSWORD: supersecret123
+      POSTGRES_DB: postgres
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+
+volumes:
+  pgdata:

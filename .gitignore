@@ -1,0 +1,26 @@
+# Golang build binary
+/server-app
+/server-app.exe
+*.exe
+*.test
+*.prof
+
+# Node/Vite (Frontend)
+/admin/node_modules/
+/admin/dist/
+/admin/npm-debug.log*
+/admin/yarn-debug.log*
+/admin/yarn-error.log*
+
+# IDE / Editors
+.vscode/
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.swp
+
+# OS Files
+.DS_Store
+Thumbs.db
