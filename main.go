@@ -21,6 +21,9 @@ func main() {
 	http.HandleFunc("/api/create-db", databases.CreateDatabaseHandlerCompat)
 	http.HandleFunc("/api/databases", databases.DatabasesHandler)
 	http.HandleFunc("/api/tables", databases.TablesHandler)
+	http.HandleFunc("/api/columns", databases.ColumnsHandler)
+	http.HandleFunc("/api/rows", databases.RowsHandler)
+	http.HandleFunc("/api/server-info", databases.ServerInfoHandler)
 
 	// Rute utama - dikembalikan ke default awal
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {

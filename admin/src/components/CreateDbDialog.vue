@@ -1,61 +1,55 @@
 <template>
-  <Dialog 
-    :visible="visible" 
-    header="Buat Database & User Baru" 
-    :modal="true" 
-    :style="{ width: '450px' }"
-    @update:visible="$emit('update:visible', $event)"
-  >
-    <div class="flex flex-col gap-4 pt-2">
-      <div class="flex flex-col gap-1.5">
-        <label for="db_name" class="text-xs font-bold text-slate-400">Nama Database</label>
-        <InputText id="db_name" v-model="form.db_name" placeholder="contoh: toko_online" required class="!bg-[#0c0f19] !border-slate-800 !text-slate-100" />
-        <small class="text-[10px] text-slate-500">Hanya alfanumerik dan underscore. Harus dimulai dengan huruf.</small>
+  <Dialog v-model:visible="visibleState" header="Buat Database Baru" :modal="true" class="w-full max-w-md bg-zinc-900 border border-white/10 rounded-lg p-6 text-white">
+    <div class="space-y-4">
+      <div class="flex flex-col gap-2">
+        <label class="text-sm font-semibold">Nama Database</label>
+        <InputText v-model="form.db_name" placeholder="contoh: db_toko" class="w-full bg-white/5 border border-white/10 text-white" />
       </div>
-      <div class="flex flex-col gap-1.5">
-        <label for="username" class="text-xs font-bold text-slate-400">Username Owner</label>
-        <InputText id="username" v-model="form.username" placeholder="contoh: admin_toko" required class="!bg-[#0c0f19] !border-slate-800 !text-slate-100" />
+      <div class="flex flex-col gap-2">
+        <label class="text-sm font-semibold">Username PostgreSQL</label>
+        <InputText v-model="form.username" placeholder="contoh: toko_admin" class="w-full bg-white/5 border border-white/10 text-white" />
       </div>
-      <div class="flex flex-col gap-1.5">
-        <label for="password" class="text-xs font-bold text-slate-400">Password Owner</label>
-        <InputText id="password" type="password" v-model="form.password" placeholder="Password aman..." required class="!bg-[#0c0f19] !border-slate-800 !text-slate-100" />
+      <div class="flex flex-col gap-2">
+        <label class="text-sm font-semibold">Password</label>
+        <InputText v-model="form.password" type="password" placeholder="Password user baru" class="w-full bg-white/5 border border-white/10 text-white" />
+      </div>
+      <div class="flex gap-2 justify-end mt-4">
+        <Button label="Batal" severity="secondary" variant="outlined" @click="visibleState = false" />
+        <Button label="Buat Database" @click="submit" />
       </div>
     </div>
-    <template #footer>
-      <Button label="Batal" class="p-button-text p-button-secondary" @click="$emit('update:visible', false)" />
-      <Button label="Buat Database" class="p-button-primary" @click="submit" :loading="loading" />
-    </template>
   </Dialog>
 </template>
 
 <script setup>
-import { ref, watch } from 'vue'
-import Dialog from 'primevue/dialog'
-import InputText from 'primevue/inputtext'
-import Button from 'primevue/button'
+import { ref, computed, watch } from 'vue';
+import Dialog from 'primevue/dialog';
+import InputText from 'primevue/inputtext';
+import Button from 'primevue/button';
 
 const props = defineProps({
   visible: {
     type: Boolean,
     required: true
-  },
-  loading: {
-    type: Boolean,
-    default: false
   }
-})
+});
 
-const emit = defineEmits(['update:visible', 'submit'])
+const emit = defineEmits(['update:visible', 'save']);
 
-const form = ref({ db_name: '', username: '', password: '' })
+const visibleState = computed({
+  get: () => props.visible,
+  set: (val) => emit('update:visible', val)
+});
+
+const form = ref({ db_name: '', username: '', password: '' });
 
 watch(() => props.visible, (newVal) => {
   if (newVal) {
-    form.value = { db_name: '', username: '', password: '' }
+    form.value = { db_name: '', username: '', password: '' };
   }
-})
+});
 
 const submit = () => {
-  emit('submit', { ...form.value })
-}
+  emit('save', { ...form.value });
+};
 </script>

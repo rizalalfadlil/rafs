@@ -9,12 +9,12 @@
         </div>
       </div>  
     </aside>
-    <div class="flex-1">
+    <div class="flex-1 flex flex-col">
       <header class="h-14 p-8 border-b border-white/10 flex items-center">
         <span class="font-medium">{{ activeMenu }}</span>
       </header>
-      <main>
-        <Dashboard v-if="activeMenu === 'Dashboard'"></Dashboard>
+      <main class="flex-1">
+        <Dashboard v-if="activeMenu === 'Dashboard'" @databases="activeMenu = 'Databases'" @sites="activeMenu = 'Sites'"></Dashboard>
         <Databases v-if="activeMenu === 'Databases'"></Databases>
       </main>
     </div>
