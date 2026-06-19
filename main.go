@@ -6,6 +6,7 @@ import (
 	"net/http"
 
 	"rafs/databases"
+	"rafs/sites"
 )
 
 func main() {
@@ -24,6 +25,21 @@ func main() {
 	http.HandleFunc("/api/columns", databases.ColumnsHandler)
 	http.HandleFunc("/api/rows", databases.RowsHandler)
 	http.HandleFunc("/api/server-info", databases.ServerInfoHandler)
+
+	// Endpoint API baru untuk mengelola website statis (sites)
+	http.HandleFunc("/api/sites", func(w http.ResponseWriter, r *http.Request) {
+		switch r.Method {
+		case http.MethodGet:
+			sites.ListSitesHandler(w, r)
+		case http.MethodDelete:
+			sites.DeleteSiteHandler(w, r)
+		default:
+			w.Header().Set("Allow", "GET, DELETE")
+			http.Error(w, "Metode tidak diizinkan", http.StatusMethodNotAllowed)
+		}
+	})
+	http.HandleFunc("/api/sites/clone", sites.CloneSiteHandler)
+	http.HandleFunc("/api/sites/upload", sites.UploadSiteHandler)
 
 	// Rute utama - dikembalikan ke default awal
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {

@@ -38,27 +38,17 @@ rafs/
 └── README.md             # Dokumentasi ini
 ```
 
-## 🌟 Fitur Utama & Progress Roadmap
-
-Proyek ini difokuskan pada tiga pilar utama untuk mendukung perkuliahan. Berikut adalah status pengembangan dari masing-masing fitur:
+## 🌟 Progress Roadmap Fitur Utama (TODO List)
 
 ### 🌐 1. Hosting Web Statis
 
-Fitur untuk menampilkan hasil pengerjaan tugas web (HTML/CSS/JS) secara instan tanpa perlu melakukan konfigurasi server berulang kali.
+- [x] Menampilkan halaman untuk setiap folder yang memiliki `index.html` dalam direktori web statis.
 
-Daftar Rencana (To-Do):
+- [ ] Fitur upload folder/clone github untuk membuat halaman baru.
 
-- [x] Setup sistem routing file statis dasar.
+- [ ] Integrasi CI/CD (GitHub Actions) untuk otomatisasi deployment.
 
-- [x] Integrasi Docker Volume agar tidak perlu rebuild container.
-
-- [ ] Mengintegrasikan CI/CD (GitHub Actions) untuk otomatisasi deployment.
-
-### 🗄️ 2. Pengelola Database Dinamis
-
-Fitur yang bertindak sebagai "Pusat Database". Jika ada tugas baru yang butuh database, server ini bisa otomatis membuatkan database dan user baru yang terisolasi.
-
-Daftar Rencana (To-Do):
+### 🗄️ 2. Pengelola Database Berbasis GUI
 
 - [x] Setup PostgreSQL Master container di docker-compose.yml.
 
@@ -81,6 +71,12 @@ Daftar Rencana (To-Do):
 - [ ] Sistem Autentikasi API: Menambahkan pengamanan API Key atau Basic Auth pada endpoint sensitif agar tidak bisa diakses sembarang orang.
 
 - [x] Server Monitoring API: Membuat endpoint /api/server-info yang dapat membaca penggunaan RAM/CPU komputer dan menampilkannya di Dashboard secara real-time.
+
+### ☁ 4. Cloud Storage Pribadi
+
+- [ ] Server dapat menyimpan file untuk keperluan apa saja.
+
+- [ ] File-file tertentu dapat diakses melalui API untuk ditampilkan di web.
 
 ## 🚀 Cara Menjalankan Server
 

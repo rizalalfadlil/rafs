@@ -17,6 +17,7 @@
         <Dashboard v-if="activeMenu === 'Dashboard'" @databases="activeMenu = 'Databases'" @sites="activeMenu = 'Sites'"></Dashboard>
         <Databases v-if="activeMenu === 'Databases'"></Databases>
         <Sites v-if="activeMenu === 'Sites'"></Sites>
+        <Storage v-if="activeMenu === 'Storage'"></Storage>
       </main>
     </div>
   </div>
@@ -28,6 +29,7 @@ import 'primeicons/primeicons.css';
 import Dashboard from './pages/dashboard.vue';
 import Databases from './pages/database.vue';
 import Sites from './pages/sites.vue';
+import Storage from './pages/storage.vue';
 
 let activeMenu = ref('Dashboard');
 
@@ -35,6 +37,7 @@ const menuItems = ref([
   { label: 'Dashboard', icon: 'pi pi-home' },
   { label: 'Sites', icon: 'pi pi-cloud' },
   { label: 'Databases', icon: 'pi pi-database' },
+  { label: 'Storage', icon: 'pi pi-box' },
 ])
 
 

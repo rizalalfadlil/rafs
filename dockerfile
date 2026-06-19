@@ -16,6 +16,7 @@ RUN go build -o server-app .
 
 # --- Tahap 3: Produksi ---
 FROM alpine:latest
+RUN apk add --no-cache git
 WORKDIR /app
 
 # Menyalin file biner dari tahap backend-builder
