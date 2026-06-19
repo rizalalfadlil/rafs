@@ -16,6 +16,7 @@
       <main class="flex-1">
         <Dashboard v-if="activeMenu === 'Dashboard'" @databases="activeMenu = 'Databases'" @sites="activeMenu = 'Sites'"></Dashboard>
         <Databases v-if="activeMenu === 'Databases'"></Databases>
+        <Sites v-if="activeMenu === 'Sites'"></Sites>
       </main>
     </div>
   </div>
@@ -26,6 +27,7 @@ import { ref } from 'vue'
 import 'primeicons/primeicons.css';
 import Dashboard from './pages/dashboard.vue';
 import Databases from './pages/database.vue';
+import Sites from './pages/sites.vue';
 
 let activeMenu = ref('Dashboard');
 
