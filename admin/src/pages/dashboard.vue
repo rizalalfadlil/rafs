@@ -37,12 +37,12 @@
         
         <p class="text-2xl mt-16 font-semibold">Quick Links</p>
         <ul class="*:p-4 space-y-4 *:border *:border-white/5 *:rounded-md *:hover:bg-white/10 *:cursor-pointer *:transition-all *:duration-200 bg-zinc-900/10">
-            <li @click="$emit('databases')" class="flex items-center gap-2">
+            <li @click="router.push('/databases')" class="flex items-center gap-2">
                 <i class="pi pi-database mr-2 text-zinc-400"></i>
                 <span class="text-lg">Databases</span>
                 <i class="pi pi-chevron-right ml-auto text-zinc-500"></i>
             </li>
-            <li @click="$emit('sites')" class="flex items-center gap-2">
+            <li @click="router.push('/sites')" class="flex items-center gap-2">
                 <i class="pi pi-cloud mr-2 text-zinc-400"></i>
                 <span class="text-lg">Sites</span>
                 <i class="pi pi-chevron-right ml-auto text-zinc-500"></i>
@@ -53,8 +53,8 @@
 
 <script setup>
 import { ref, onMounted, onUnmounted } from 'vue'
-
-defineEmits(['databases', 'sites']);
+import { useRouter } from 'vue-router'
+const router = useRouter()
 
 const info = ref({
   uptime: 'Loading...',

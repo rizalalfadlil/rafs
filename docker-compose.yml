@@ -6,6 +6,8 @@ services:
     container_name: go-server-container
     volumes:
       - ./www:/app/www # Menyambungkan folder lokal ./www ke folder /app/www di dalam container
+      - ./storage_data:/app/storage_data
+      - ./public:/app/public
     depends_on:
       - db
 

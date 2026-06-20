@@ -24,3 +24,8 @@
 # OS Files
 .DS_Store
 Thumbs.db
+
+# Uploaded Files
+/storage_data
+/public
+

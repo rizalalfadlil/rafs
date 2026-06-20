@@ -4,15 +4,26 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"os"
 
 	"rafs/databases"
 	"rafs/sites"
+	"rafs/storage"
 )
 
 func main() {
+	// Buat folder-folder yang dibutuhkan jika belum ada
+	_ = os.MkdirAll("./www", 0755)
+	_ = os.MkdirAll("./storage_data", 0755)
+	_ = os.MkdirAll("./public", 0755)
+
 	// Jalankan file server untuk web statis (dari langkah sebelumnya)
 	fileServer := http.FileServer(http.Dir("./www"))
 	http.Handle("/sites/", http.StripPrefix("/sites/", fileServer))
+
+	// Jalankan file server untuk berkas publik
+	publicServer := http.FileServer(http.Dir("./public"))
+	http.Handle("/public/", http.StripPrefix("/public/", publicServer))
 
 	// Jalankan file server untuk admin panel (Vue app)
 	adminServer := http.FileServer(http.Dir("./admin/dist"))
@@ -40,6 +51,14 @@ func main() {
 	})
 	http.HandleFunc("/api/sites/clone", sites.CloneSiteHandler)
 	http.HandleFunc("/api/sites/upload", sites.UploadSiteHandler)
+
+	// Endpoint API baru untuk mengelola cloud storage
+	http.HandleFunc("/api/storage", storage.ListStorageHandler)
+	http.HandleFunc("/api/storage/folder", storage.CreateFolderHandler)
+	http.HandleFunc("/api/storage/upload", storage.UploadFilesHandler)
+	http.HandleFunc("/api/storage/delete", storage.DeleteItemsHandler)
+	http.HandleFunc("/api/storage/download", storage.DownloadFileHandler)
+	http.HandleFunc("/api/storage/public", storage.SetPublicHandler)
 
 	// Rute utama - dikembalikan ke default awal
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {

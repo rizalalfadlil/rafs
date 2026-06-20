@@ -21,7 +21,7 @@ rafs/
 │   ├── src/
 │   │   ├── components/   # Komponen UI modular (Dialogs, Sidebar, Details)
 │   │   ├── composables/  # Logika bisnis/state terpisah (useDatabase.js)
-│   │   ├── pages/        # Halaman utama (dashboard.vue, database.vue)
+│   │   ├── pages/        # Halaman utama (dashboard.vue, database.vue, sites.vue, storage.vue)
 │   │   └── App.vue
 │   ├── vite.config.js
 │   └── package.json
@@ -31,6 +31,12 @@ rafs/
 │   ├── column.go         # Operasi CRUD kolom (ADD, DROP, RENAME)
 │   ├── row.go            # Operasi CRUD baris (INSERT, UPDATE, DELETE)
 │   └── system.go         # Collector metrik sistem real-time (/api/server-info)
+├── sites/                # Backend package untuk pengelola static website hosting
+│   └── sites.go          # Operasi clone repository Git dan ekstrak file ZIP
+├── storage/              # Backend package untuk pengelola private cloud storage
+│   └── storage.go        # Operasi list, folder baru, upload, hapus, download, & set public
+├── storage_data/         # Direktori penyimpanan berkas pribadi (private cloud storage)
+├── public/               # Direktori penyimpanan berkas publik (dapat diakses dari luar)
 ├── www/                  # Tempat menyimpan folder web statis (sites/about, sites/hello, dll.)
 ├── main.go               # Kode sumber utama server Golang
 ├── Dockerfile            # Instruksi multi-stage build untuk aplikasi Go (Vue + Go runtime)
@@ -44,7 +50,7 @@ rafs/
 
 - [x] Menampilkan halaman untuk setiap folder yang memiliki `index.html` dalam direktori web statis.
 
-- [ ] Fitur upload folder/clone github untuk membuat halaman baru.
+- [x] Fitur upload folder/clone github untuk membuat halaman baru.
 
 - [ ] Integrasi CI/CD (GitHub Actions) untuk otomatisasi deployment.
 
@@ -74,9 +80,9 @@ Daftar Rencana (To-Do):
 
 ### ☁ 4. Cloud Storage Pribadi
 
-- [ ] Server dapat menyimpan file untuk keperluan apa saja.
+- [x] Server dapat menyimpan file untuk keperluan apa saja.
 
-- [ ] File-file tertentu dapat diakses melalui API untuk ditampilkan di web.
+- [x] File-file tertentu dapat diakses melalui API untuk ditampilkan di web.
 
 ## 🚀 Cara Menjalankan Server
 

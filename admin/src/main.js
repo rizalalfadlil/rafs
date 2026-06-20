@@ -3,6 +3,7 @@ import PrimeVue from 'primevue/config'
 import Aura from '@primevue/themes/aura'
 import ToastService from 'primevue/toastservice'
 import App from './App.vue'
+import router from './router'
 import './assets/styles/main.css'
 
 // Paksa dark mode pada elemen HTML
@@ -19,5 +20,6 @@ app.use(PrimeVue, {
     }
 })
 app.use(ToastService)
+app.use(router)
 
 app.mount('#app')
