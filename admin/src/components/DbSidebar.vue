@@ -1,5 +1,5 @@
 <template>
-  <aside class="w-72 border-e border-white/10 p-4 select-none flex flex-col justify-between">
+  <aside class="w-full sm:w-72 sm:border-e border-white/10 p-4 select-none flex flex-col justify-between" :class="activeDatabase !== null? 'hidden sm:flex':''">
     <div>
       <p class="text-lg mb-4 cursor-pointer hover:opacity-80" @click="$emit('back')">Databases</p>
       <ul class="space-y-2 max-h-[calc(100vh-200px)] overflow-y-auto p-1">

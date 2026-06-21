@@ -35,6 +35,13 @@ func joinStrings(slice []string, sep string) string {
 
 // TablesHandler mengelola CRUD tabel di dalam database tertentu
 func TablesHandler(w http.ResponseWriter, r *http.Request) {
+	username := r.Header.Get("X-Database-User")
+	password := r.Header.Get("X-Database-Password")
+	if username == "" || password == "" {
+		respondWithError(w, http.StatusUnauthorized, "Autentikasi database diperlukan")
+		return
+	}
+
 	switch r.Method {
 	case http.MethodGet:
 		dbName := r.URL.Query().Get("db_name")
@@ -42,7 +49,7 @@ func TablesHandler(w http.ResponseWriter, r *http.Request) {
 			respondWithError(w, http.StatusBadRequest, "Parameter db_name wajib disertakan")
 			return
 		}
-		tables, err := ListTables(dbName)
+		tables, err := ListTables(dbName, username, password)
 		if err != nil {
 			respondWithError(w, http.StatusInternalServerError, err.Error())
 			return
@@ -63,7 +70,7 @@ func TablesHandler(w http.ResponseWriter, r *http.Request) {
 			respondWithError(w, http.StatusBadRequest, "Input tidak valid")
 			return
 		}
-		err = CreateTable(req.DBName, req.TableName, req.Columns)
+		err = CreateTable(req.DBName, username, password, req.TableName, req.Columns)
 		if err != nil {
 			respondWithError(w, http.StatusInternalServerError, err.Error())
 			return
@@ -84,7 +91,7 @@ func TablesHandler(w http.ResponseWriter, r *http.Request) {
 			respondWithError(w, http.StatusBadRequest, "Input tidak valid")
 			return
 		}
-		err = RenameTable(req.DBName, req.OldName, req.NewName)
+		err = RenameTable(req.DBName, username, password, req.OldName, req.NewName)
 		if err != nil {
 			respondWithError(w, http.StatusInternalServerError, err.Error())
 			return
@@ -101,7 +108,7 @@ func TablesHandler(w http.ResponseWriter, r *http.Request) {
 			respondWithError(w, http.StatusBadRequest, "Parameter db_name dan table_name wajib disertakan")
 			return
 		}
-		err := DeleteTable(dbName, tableName)
+		err := DeleteTable(dbName, username, password, tableName)
 		if err != nil {
 			respondWithError(w, http.StatusInternalServerError, err.Error())
 			return
@@ -118,12 +125,12 @@ func TablesHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 // ListTables mengembalikan daftar tabel di database tertentu
-func ListTables(dbName string) ([]string, error) {
-	if !isValidIdentifier(dbName) {
-		return nil, fmt.Errorf("nama database tidak valid")
+func ListTables(dbName, username, password string) ([]string, error) {
+	if !isValidIdentifier(dbName) || !isValidIdentifier(username) {
+		return nil, fmt.Errorf("nama database atau username tidak valid")
 	}
 
-	dsn := fmt.Sprintf("host=db port=5432 user=superadmin password=supersecret123 dbname=%s sslmode=disable", dbName)
+	dsn := fmt.Sprintf("host=db port=5432 user=%s password=%s dbname=%s sslmode=disable", username, password, dbName)
 	db, err := sql.Open("postgres", dsn)
 	if err != nil {
 		return nil, fmt.Errorf("gagal terhubung ke database %s: %w", dbName, err)
@@ -148,9 +155,9 @@ func ListTables(dbName string) ([]string, error) {
 }
 
 // CreateTable membuat tabel baru di database tertentu
-func CreateTable(dbName, tableName string, columns []ColumnDef) error {
-	if !isValidIdentifier(dbName) || !isValidIdentifier(tableName) {
-		return fmt.Errorf("nama database atau tabel tidak valid")
+func CreateTable(dbName, username, password, tableName string, columns []ColumnDef) error {
+	if !isValidIdentifier(dbName) || !isValidIdentifier(tableName) || !isValidIdentifier(username) {
+		return fmt.Errorf("nama database, username, atau tabel tidak valid")
 	}
 	if len(columns) == 0 {
 		return fmt.Errorf("kolom tidak boleh kosong")
@@ -167,7 +174,7 @@ func CreateTable(dbName, tableName string, columns []ColumnDef) error {
 		colQueries = append(colQueries, fmt.Sprintf("%s %s", col.Name, col.Type))
 	}
 
-	dsn := fmt.Sprintf("host=db port=5432 user=superadmin password=supersecret123 dbname=%s sslmode=disable", dbName)
+	dsn := fmt.Sprintf("host=db port=5432 user=%s password=%s dbname=%s sslmode=disable", username, password, dbName)
 	db, err := sql.Open("postgres", dsn)
 	if err != nil {
 		return fmt.Errorf("gagal terhubung ke database: %w", err)
@@ -183,12 +190,12 @@ func CreateTable(dbName, tableName string, columns []ColumnDef) error {
 }
 
 // RenameTable mengubah nama tabel di database tertentu
-func RenameTable(dbName, oldName, newName string) error {
-	if !isValidIdentifier(dbName) || !isValidIdentifier(oldName) || !isValidIdentifier(newName) {
-		return fmt.Errorf("nama database atau tabel tidak valid")
+func RenameTable(dbName, username, password, oldName, newName string) error {
+	if !isValidIdentifier(dbName) || !isValidIdentifier(oldName) || !isValidIdentifier(newName) || !isValidIdentifier(username) {
+		return fmt.Errorf("nama database, username, atau tabel tidak valid")
 	}
 
-	dsn := fmt.Sprintf("host=db port=5432 user=superadmin password=supersecret123 dbname=%s sslmode=disable", dbName)
+	dsn := fmt.Sprintf("host=db port=5432 user=%s password=%s dbname=%s sslmode=disable", username, password, dbName)
 	db, err := sql.Open("postgres", dsn)
 	if err != nil {
 		return fmt.Errorf("gagal terhubung ke database: %w", err)
@@ -204,12 +211,12 @@ func RenameTable(dbName, oldName, newName string) error {
 }
 
 // DeleteTable menghapus tabel di database tertentu
-func DeleteTable(dbName, tableName string) error {
-	if !isValidIdentifier(dbName) || !isValidIdentifier(tableName) {
-		return fmt.Errorf("nama database atau tabel tidak valid")
+func DeleteTable(dbName, username, password, tableName string) error {
+	if !isValidIdentifier(dbName) || !isValidIdentifier(tableName) || !isValidIdentifier(username) {
+		return fmt.Errorf("nama database, username, atau tabel tidak valid")
 	}
 
-	dsn := fmt.Sprintf("host=db port=5432 user=superadmin password=supersecret123 dbname=%s sslmode=disable", dbName)
+	dsn := fmt.Sprintf("host=db port=5432 user=%s password=%s dbname=%s sslmode=disable", username, password, dbName)
 	db, err := sql.Open("postgres", dsn)
 	if err != nil {
 		return fmt.Errorf("gagal terhubung ke database: %w", err)

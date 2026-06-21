@@ -36,6 +36,7 @@ func main() {
 	http.HandleFunc("/api/columns", databases.ColumnsHandler)
 	http.HandleFunc("/api/rows", databases.RowsHandler)
 	http.HandleFunc("/api/server-info", databases.ServerInfoHandler)
+	http.HandleFunc("/api/query", databases.QueryHandler)
 
 	// Endpoint API baru untuk mengelola website statis (sites)
 	http.HandleFunc("/api/sites", func(w http.ResponseWriter, r *http.Request) {

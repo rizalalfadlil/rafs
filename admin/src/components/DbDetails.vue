@@ -21,7 +21,7 @@
     </div>
 
     <!-- Tables navigation -->
-    <div class="space-y-3">
+    <div class="space-y-3 mt-3">
       <div class="flex items-center justify-between">
         <p class="text-lg font-semibold">Tables</p>
         <Button size="small" class="flex items-center gap-1" @click="$emit('create-table-click')">

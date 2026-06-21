@@ -8,6 +8,17 @@ export function useDatabase() {
   const activeDatabase = ref(null);
   const activeTable = ref(null);
 
+  // Database credentials & login state
+  const activeDbUser = ref('');
+  const activeDbPassword = ref('');
+  const showLoginDbDialog = ref(false);
+  const dbToLogin = ref(null);
+
+  // SQL Query Runner state
+  const sqlQuery = ref('');
+  const queryResult = ref(null);
+  const queryRunning = ref(false);
+
   // Dialog visible states
   const showCreateDbDialog = ref(false);
   const showCreateTableDialog = ref(false);
@@ -25,6 +36,16 @@ export function useDatabase() {
   const back = () => {
     activeDatabase.value = null;
     activeTable.value = null;
+    activeDbUser.value = '';
+    activeDbPassword.value = '';
+  };
+
+  // Helper to generate auth headers
+  const getAuthHeaders = () => {
+    return {
+      'X-Database-User': activeDbUser.value || '',
+      'X-Database-Password': activeDbPassword.value || ''
+    };
   };
 
   // Check if a column has an auto-incrementing property
@@ -35,7 +56,7 @@ export function useDatabase() {
     return type.includes('serial') || def.includes('nextval') || (col.name === 'id' && type.includes('int') && def.includes('nextval'));
   };
 
-  // Fetch databases list from API
+  // Fetch databases list from API (uses superadmin credentials inside Go server by default)
   const fetchDatabases = async () => {
     try {
       const res = await fetch('/api/databases');
@@ -54,17 +75,87 @@ export function useDatabase() {
     }
   };
 
-  // Select DB and Fetch Tables
+  // Select DB and verify or prompt credentials
   const selectDatabase = async (db) => {
-    activeDatabase.value = db;
-    activeDatabase.value.newNameInput = db.name;
-    activeTable.value = null;
-    await fetchTables(db.name);
+    const cached = localStorage.getItem(`rafs_db_cred_${db.name}`);
+    if (cached) {
+      try {
+        const cred = JSON.parse(cached);
+        activeDbUser.value = cred.username;
+        activeDbPassword.value = cred.password;
+        activeDatabase.value = db;
+        activeDatabase.value.newNameInput = db.name;
+        activeTable.value = null;
+        
+        // Coba memuat tabel untuk validasi
+        await fetchTables(db.name);
+        return;
+      } catch (e) {
+        localStorage.removeItem(`rafs_db_cred_${db.name}`);
+      }
+    }
+    
+    // Kredensial tidak ditemukan, tampilkan dialog login
+    dbToLogin.value = db;
+    showLoginDbDialog.value = true;
   };
 
+  // Login Database
+  const loginDatabase = async (credentials) => {
+    try {
+      const res = await fetch(`/api/tables?db_name=${encodeURIComponent(dbToLogin.value.name)}`, {
+        headers: {
+          'X-Database-User': credentials.username,
+          'X-Database-Password': credentials.password
+        }
+      });
+      const data = await res.json();
+      if (res.ok && data.status === 'sukses') {
+        localStorage.setItem(`rafs_db_cred_${dbToLogin.value.name}`, JSON.stringify(credentials));
+        activeDbUser.value = credentials.username;
+        activeDbPassword.value = credentials.password;
+        
+        activeDatabase.value = dbToLogin.value;
+        activeDatabase.value.newNameInput = dbToLogin.value.name;
+        activeTable.value = null;
+        
+        const dbObj = databases.value.find(d => d.name === dbToLogin.value.name);
+        if (dbObj) {
+          dbObj.tables = data.tables.map(tableName => ({
+            name: tableName,
+            columns: [],
+            rows: [],
+            newNameInput: tableName
+          }));
+        }
+        
+        showLoginDbDialog.value = false;
+        dbToLogin.value = null;
+        toast.add({ severity: 'success', summary: 'Akses Diterima', detail: 'Berhasil masuk ke database!', life: 3000 });
+      } else {
+        toast.add({ severity: 'error', summary: 'Akses Ditolak', detail: data.message || 'Username atau password salah', life: 3000 });
+      }
+    } catch (err) {
+      toast.add({ severity: 'error', summary: 'Error', detail: 'Gagal terhubung ke database: ' + err.message, life: 3000 });
+    }
+  };
+
+  const logoutDatabase = () => {
+    if (activeDatabase.value) {
+      localStorage.removeItem(`rafs_db_cred_${activeDatabase.value.name}`);
+    }
+    activeDatabase.value = null;
+    activeTable.value = null;
+    activeDbUser.value = '';
+    activeDbPassword.value = '';
+  };
+
+  // Fetch Tables
   const fetchTables = async (dbName) => {
     try {
-      const res = await fetch(`/api/tables?db_name=${encodeURIComponent(dbName)}`);
+      const res = await fetch(`/api/tables?db_name=${encodeURIComponent(dbName)}`, {
+        headers: getAuthHeaders()
+      });
       const data = await res.json();
       if (data.status === 'sukses') {
         const db = databases.value.find(d => d.name === dbName);
@@ -93,10 +184,14 @@ export function useDatabase() {
 
   const fetchColumnsAndRows = async (dbName, tableName) => {
     try {
-      const colRes = await fetch(`/api/columns?db_name=${encodeURIComponent(dbName)}&table_name=${encodeURIComponent(tableName)}`);
+      const colRes = await fetch(`/api/columns?db_name=${encodeURIComponent(dbName)}&table_name=${encodeURIComponent(tableName)}`, {
+        headers: getAuthHeaders()
+      });
       const colData = await colRes.json();
       
-      const rowRes = await fetch(`/api/rows?db_name=${encodeURIComponent(dbName)}&table_name=${encodeURIComponent(tableName)}`);
+      const rowRes = await fetch(`/api/rows?db_name=${encodeURIComponent(dbName)}&table_name=${encodeURIComponent(tableName)}`, {
+        headers: getAuthHeaders()
+      });
       const rowData = await rowRes.json();
 
       if (colData.status === 'sukses' && rowData.status === 'sukses') {
@@ -128,6 +223,12 @@ export function useDatabase() {
       });
       const data = await res.json();
       if (data.status === 'sukses') {
+        // Cache credentials so they can access it immediately
+        localStorage.setItem(`rafs_db_cred_${payload.db_name}`, JSON.stringify({
+          username: payload.username,
+          password: payload.password
+        }));
+
         toast.add({ severity: 'success', summary: 'Sukses', detail: data.message, life: 3000 });
         showCreateDbDialog.value = false;
         await fetchDatabases();
@@ -139,7 +240,7 @@ export function useDatabase() {
     }
   };
 
-  // Database: Rename
+  // Database: Rename (uses provided credentials to authorize first)
   const saveDatabaseName = async () => {
     if (!activeDatabase.value) return;
     const oldName = activeDatabase.value.name;
@@ -149,11 +250,21 @@ export function useDatabase() {
     try {
       const res = await fetch('/api/databases', {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          ...getAuthHeaders()
+        },
         body: JSON.stringify({ old_name: oldName, new_name: newName })
       });
       const data = await res.json();
       if (data.status === 'sukses') {
+        // Update credentials key
+        const cred = localStorage.getItem(`rafs_db_cred_${oldName}`);
+        if (cred) {
+          localStorage.setItem(`rafs_db_cred_${newName}`, cred);
+          localStorage.removeItem(`rafs_db_cred_${oldName}`);
+        }
+
         toast.add({ severity: 'success', summary: 'Sukses', detail: data.message, life: 3000 });
         await fetchDatabases();
         const updatedDb = databases.value.find(d => d.name === newName);
@@ -168,7 +279,7 @@ export function useDatabase() {
     }
   };
 
-  // Database: Drop
+  // Database: Drop (uses provided credentials to authorize first)
   const dropDatabase = async () => {
     if (!activeDatabase.value) return;
     if (!confirm(`Apakah Anda yakin ingin menghapus database '${activeDatabase.value.name}' beserta seluruh isinya?`)) {
@@ -176,10 +287,15 @@ export function useDatabase() {
     }
     try {
       const res = await fetch(`/api/databases?db_name=${encodeURIComponent(activeDatabase.value.name)}`, {
-        method: 'DELETE'
+        method: 'DELETE',
+        headers: getAuthHeaders()
       });
       const data = await res.json();
       if (data.status === 'sukses') {
+        localStorage.removeItem(`rafs_db_cred_${activeDatabase.value.name}`);
+        activeDbUser.value = '';
+        activeDbPassword.value = '';
+
         toast.add({ severity: 'success', summary: 'Sukses', detail: data.message, life: 3000 });
         activeDatabase.value = null;
         activeTable.value = null;
@@ -197,7 +313,10 @@ export function useDatabase() {
     try {
       const res = await fetch('/api/tables', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          ...getAuthHeaders()
+        },
         body: JSON.stringify({
           db_name: activeDatabase.value.name,
           table_name: payload.table_name,
@@ -227,7 +346,10 @@ export function useDatabase() {
     try {
       const res = await fetch('/api/tables', {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          ...getAuthHeaders()
+        },
         body: JSON.stringify({
           db_name: activeDatabase.value.name,
           old_name: oldName,
@@ -261,7 +383,8 @@ export function useDatabase() {
     }
     try {
       const res = await fetch(`/api/tables?db_name=${encodeURIComponent(activeDatabase.value.name)}&table_name=${encodeURIComponent(activeTable.value.name)}`, {
-        method: 'DELETE'
+        method: 'DELETE',
+        headers: getAuthHeaders()
       });
       const data = await res.json();
       if (data.status === 'sukses') {
@@ -281,7 +404,10 @@ export function useDatabase() {
     try {
       const res = await fetch('/api/columns', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          ...getAuthHeaders()
+        },
         body: JSON.stringify({
           db_name: activeDatabase.value.name,
           table_name: activeTable.value.name,
@@ -312,7 +438,10 @@ export function useDatabase() {
     try {
       const res = await fetch('/api/columns', {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          ...getAuthHeaders()
+        },
         body: JSON.stringify({
           db_name: activeDatabase.value.name,
           table_name: activeTable.value.name,
@@ -349,7 +478,8 @@ export function useDatabase() {
       let successCount = 0;
       for (const colName of checkedCols) {
         const res = await fetch(`/api/columns?db_name=${encodeURIComponent(activeDatabase.value.name)}&table_name=${encodeURIComponent(activeTable.value.name)}&column_name=${encodeURIComponent(colName)}`, {
-          method: 'DELETE'
+          method: 'DELETE',
+          headers: getAuthHeaders()
         });
         const data = await res.json();
         if (data.status === 'sukses') {
@@ -390,7 +520,10 @@ export function useDatabase() {
 
       const res = await fetch('/api/rows', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          ...getAuthHeaders()
+        },
         body: JSON.stringify({
           db_name: activeDatabase.value.name,
           table_name: activeTable.value.name,
@@ -443,7 +576,10 @@ export function useDatabase() {
 
       const res = await fetch('/api/rows', {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          ...getAuthHeaders()
+        },
         body: JSON.stringify({
           db_name: activeDatabase.value.name,
           table_name: activeTable.value.name,
@@ -485,7 +621,10 @@ export function useDatabase() {
 
         const res = await fetch('/api/rows', {
           method: 'DELETE',
-          headers: { 'Content-Type': 'application/json' },
+          headers: {
+            'Content-Type': 'application/json',
+            ...getAuthHeaders()
+          },
           body: JSON.stringify({
             db_name: activeDatabase.value.name,
             table_name: activeTable.value.name,
@@ -504,6 +643,66 @@ export function useDatabase() {
     }
   };
 
+  // SQL Runner: Execute custom query
+  const runSqlCommand = async () => {
+    if (!activeDatabase.value) {
+      toast.add({ severity: 'warn', summary: 'Peringatan', detail: 'Pilih database terlebih dahulu', life: 3000 });
+      return;
+    }
+    if (!sqlQuery.value.trim()) {
+      toast.add({ severity: 'warn', summary: 'Peringatan', detail: 'Perintah SQL kosong', life: 3000 });
+      return;
+    }
+
+    queryRunning.value = true;
+    queryResult.value = null;
+
+    try {
+      const res = await fetch('/api/query', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...getAuthHeaders()
+        },
+        body: JSON.stringify({
+          db_name: activeDatabase.value.name,
+          query: sqlQuery.value
+        })
+      });
+      const data = await res.json();
+      if (data.status === 'sukses') {
+        queryResult.value = data;
+        toast.add({ severity: 'success', summary: 'Sukses', detail: 'Query berhasil dieksekusi!', life: 3000 });
+        
+        // Auto-refresh layout jika query mengubah DDL/DML
+        const lowerQuery = sqlQuery.value.toLowerCase();
+        if (
+          lowerQuery.includes('table') || 
+          lowerQuery.includes('column') || 
+          lowerQuery.includes('insert') || 
+          lowerQuery.includes('update') || 
+          lowerQuery.includes('delete') || 
+          lowerQuery.includes('create') || 
+          lowerQuery.includes('drop')
+        ) {
+          await fetchTables(activeDatabase.value.name);
+          if (activeTable.value) {
+            await fetchColumnsAndRows(activeDatabase.value.name, activeTable.value.name);
+          }
+        }
+      } else {
+        queryResult.value = { status: 'error', message: data.message };
+        toast.add({ severity: 'error', summary: 'Query Gagal', detail: data.message, life: 4000 });
+      }
+    } catch (err) {
+      queryResult.value = { status: 'error', message: err.message };
+      toast.add({ severity: 'error', summary: 'Error', detail: err.message, life: 4000 });
+    } finally {
+      queryRunning.value = false;
+      sqlQuery.value = '';
+    }
+  };
+
   onMounted(() => {
     fetchDatabases();
   });
@@ -512,6 +711,13 @@ export function useDatabase() {
     databases,
     activeDatabase,
     activeTable,
+    activeDbUser,
+    activeDbPassword,
+    showLoginDbDialog,
+    dbToLogin,
+    sqlQuery,
+    queryResult,
+    queryRunning,
     showCreateDbDialog,
     showCreateTableDialog,
     showAddColDialog,
@@ -525,6 +731,8 @@ export function useDatabase() {
     isAutoIncrement,
     fetchDatabases,
     selectDatabase,
+    loginDatabase,
+    logoutDatabase,
     fetchTables,
     selectTable,
     fetchColumnsAndRows,
@@ -542,6 +750,7 @@ export function useDatabase() {
     addRow,
     openEditRow,
     updateRow,
-    deleteSelectedRows
+    deleteSelectedRows,
+    runSqlCommand
   };
 }

@@ -4,6 +4,7 @@ import Dashboard from '../pages/dashboard.vue'
 import Databases from '../pages/database.vue'
 import Sites from '../pages/sites.vue'
 import Storage from '../pages/storage.vue'
+import Docs from '../pages/docs.vue'
 
 const routes = [
   {
@@ -25,6 +26,11 @@ const routes = [
     path: '/admin/storage',
     name: 'Storage',
     component: Storage
+  },
+  {
+    path: '/admin/docs',
+    name: 'Docs',
+    component: Docs
   }
 ]
 

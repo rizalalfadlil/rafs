@@ -318,9 +318,9 @@ onMounted(() => {
 <template>
     <Toast />
     
-    <div class="p-6 space-y-6">
+    <div class="">
         <!-- Top Stats and Actions Section -->
-        <section class="grid grid-cols-1 md:grid-cols-3 gap-6 items-center border border-white/5 bg-zinc-950/20 p-5 rounded-lg">
+        <section class="grid grid-cols-1 md:grid-cols-3 gap-6 items-center p-5">
             <!-- Quota Progress Card -->
             <div class="md:col-span-2 space-y-2">
                 <div class="flex justify-between items-center text-sm font-semibold">
@@ -341,7 +341,7 @@ onMounted(() => {
             </div>
             
             <!-- Global Actions -->
-            <div class="flex gap-2 justify-end items-center">
+            <div class="flex *:flex-grow flex-wrap gap-2 justify-end items-center">
                 <template v-if="!selectMode">
                     <Button label="Upload" icon="pi pi-upload" @click="showUploadDialog = true" class="px-4" size="small" />
                     <Button label="Folder Baru" icon="pi pi-plus" severity="secondary" @click="showNewFolderDialog = true" class="px-4" size="small" />
@@ -356,14 +356,14 @@ onMounted(() => {
         </section>
 
         <!-- Breadcrumb Navigation -->
-        <div class="p-3 bg-zinc-900/60 border border-white/5 rounded-lg px-4 flex gap-2 items-center text-sm text-zinc-400 select-none">
-            <span @click="navigateToRoot" class="cursor-pointer hover:text-white transition-colors flex items-center gap-1 font-semibold">
+        <div class="p-3 bg-white/5 border border-white/5 px-4 flex gap-2 items-center text-sm select-none">
+            <span @click="navigateToRoot" class="cursor-pointer text-white/50 hover:text-white transition-colors flex items-center gap-1 font-semibold">
                 <i class="pi pi-box"></i> Root
             </span>
             
             <template v-for="(segment, idx) in pathSegments" :key="idx">
-                <i class="pi pi-chevron-right text-[10px] text-zinc-600"></i>
-                <span @click="navigateToSegment(idx)" class="cursor-pointer hover:text-white transition-colors font-mono">
+                <i class="pi pi-chevron-right text-[10px] text-white/50"></i>
+                <span @click="navigateToSegment(idx)" class="cursor-pointer text-white/50 hover:text-white transition-colors">
                     {{ segment }}
                 </span>
             </template>
@@ -374,9 +374,9 @@ onMounted(() => {
         </div>
 
         <!-- Directory Contents Grid -->
-        <main class="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8 gap-4 min-h-[300px]">
+        <main class="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8 gap-4 min-h-[300px] p-4">
             <!-- Empty Folder State -->
-            <div v-if="directory.length === 0" class="col-span-full border border-dashed border-white/10 p-12 rounded-lg text-center flex flex-col items-center justify-center gap-3 text-zinc-500">
+            <div v-if="directory.length === 0" class="col-span-full border border-dashed border-white/10 p-12 rounded text-center flex flex-col items-center justify-center gap-3">
                 <i class="pi pi-folder-open text-4xl text-zinc-600"></i>
                 <p>Folder ini kosong. Gunakan tombol 'Upload' atau 'Folder Baru' di atas.</p>
             </div>
@@ -385,7 +385,7 @@ onMounted(() => {
             <div v-for="item in directory" :key="item.name"
                  @click="handleItemClick(item)"
                  :class="[
-                     'relative border p-4 rounded-lg bg-zinc-950/20 flex flex-col items-center justify-between gap-3 text-center aspect-square transition-all duration-200 select-none cursor-pointer',
+                     'relative border p-4 flex flex-col items-center justify-between gap-3 text-center aspect-square transition-all duration-200 select-none cursor-pointer',
                      isSelected(item.name) ? 'border-amber-500/60 bg-amber-500/5 ring-1 ring-amber-500/30' : 'border-white/5 hover:border-zinc-500 hover:-translate-y-0.5 hover:bg-zinc-950/40'
                  ]">
                 <!-- Select Checkbox Overlay -->

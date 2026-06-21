@@ -62,19 +62,19 @@ rafs/
 
 - [x] Dashboard GUI: Membuat halaman khusus untuk mengelola database dalam GUI (CRUD database, tabel, kolom, dan baris data).
 
-- [ ] Meningkatkan Keamanan dengan menambahkan validasi input keamanan, serta sistem autentikasi API Key atau Basic Auth pada endpoint sensitif agar tidak bisa diakses sembarang orang.
+- [x] Meningkatkan Keamanan dengan menambahkan sistem autentikasi kredensial user & password database (`X-Database-User` & `X-Database-Password`) pada endpoint tabel, kolom, baris, dan query.
 
-- [ ] Menambahkan fitur untuk menjalankan perintah SQL dalam GUI agar bisa mengelola database lebih mudah.
+- [x] Menambahkan fitur terminal untuk menjalankan perintah SQL (DDL/DML & SELECT) secara langsung dari GUI lengkap dengan output visual.
 
 ### 🌐 3. Kumpulan API Service
 
-Tempat mengumpulkan berbagai backend service atau endpoint REST API yang nanti dibangun menggunakan Golang untuk mendukung tugas frontend atau aplikasi mobile.
+Tempat mengumpulkan berbagai backend service atau endpoint REST API yang dibangun menggunakan Golang.
 
 Daftar Rencana (To-Do):
 
-- [ ] Struktur dasar router Golang.
+- [x] Struktur dasar router Golang (`main.go`).
 
-- [ ] Sistem Autentikasi API: Menambahkan pengamanan API Key atau Basic Auth pada endpoint sensitif agar tidak bisa diakses sembarang orang.
+- [x] Sistem Autentikasi API: Autentikasi koneksi database relasional per-user menggunakan Custom Headers (`X-Database-User` dan `X-Database-Password`).
 
 - [x] Server Monitoring API: Membuat endpoint /api/server-info yang dapat membaca penggunaan RAM/CPU komputer dan menampilkannya di Dashboard secara real-time.
 

@@ -10,12 +10,12 @@ import (
 )
 
 // ListColumns mengembalikan daftar kolom beserta tipe datanya untuk tabel tertentu
-func ListColumns(dbName, tableName string) ([]map[string]string, error) {
-	if !isValidIdentifier(dbName) || !isValidIdentifier(tableName) {
-		return nil, fmt.Errorf("nama database atau tabel tidak valid")
+func ListColumns(dbName, username, password, tableName string) ([]map[string]string, error) {
+	if !isValidIdentifier(dbName) || !isValidIdentifier(tableName) || !isValidIdentifier(username) {
+		return nil, fmt.Errorf("nama database, username, atau tabel tidak valid")
 	}
 
-	dsn := fmt.Sprintf("host=db port=5432 user=superadmin password=supersecret123 dbname=%s sslmode=disable", dbName)
+	dsn := fmt.Sprintf("host=db port=5432 user=%s password=%s dbname=%s sslmode=disable", username, password, dbName)
 	db, err := sql.Open("postgres", dsn)
 	if err != nil {
 		return nil, fmt.Errorf("gagal terhubung ke database %s: %w", dbName, err)
@@ -56,15 +56,15 @@ func ListColumns(dbName, tableName string) ([]map[string]string, error) {
 }
 
 // AddColumn menambahkan kolom baru ke dalam tabel
-func AddColumn(dbName, tableName, colName, colType string) error {
-	if !isValidIdentifier(dbName) || !isValidIdentifier(tableName) || !isValidIdentifier(colName) {
-		return fmt.Errorf("nama database, tabel, atau kolom tidak valid")
+func AddColumn(dbName, username, password, tableName, colName, colType string) error {
+	if !isValidIdentifier(dbName) || !isValidIdentifier(tableName) || !isValidIdentifier(colName) || !isValidIdentifier(username) {
+		return fmt.Errorf("nama database, username, tabel, atau kolom tidak valid")
 	}
 	if !isValidType(colType) {
 		return fmt.Errorf("tipe data tidak valid")
 	}
 
-	dsn := fmt.Sprintf("host=db port=5432 user=superadmin password=supersecret123 dbname=%s sslmode=disable", dbName)
+	dsn := fmt.Sprintf("host=db port=5432 user=%s password=%s dbname=%s sslmode=disable", username, password, dbName)
 	db, err := sql.Open("postgres", dsn)
 	if err != nil {
 		return fmt.Errorf("gagal terhubung ke database: %w", err)
@@ -80,12 +80,12 @@ func AddColumn(dbName, tableName, colName, colType string) error {
 }
 
 // DeleteColumn menghapus kolom dari tabel
-func DeleteColumn(dbName, tableName, colName string) error {
-	if !isValidIdentifier(dbName) || !isValidIdentifier(tableName) || !isValidIdentifier(colName) {
-		return fmt.Errorf("nama database, tabel, atau kolom tidak valid")
+func DeleteColumn(dbName, username, password, tableName, colName string) error {
+	if !isValidIdentifier(dbName) || !isValidIdentifier(tableName) || !isValidIdentifier(colName) || !isValidIdentifier(username) {
+		return fmt.Errorf("nama database, username, tabel, atau kolom tidak valid")
 	}
 
-	dsn := fmt.Sprintf("host=db port=5432 user=superadmin password=supersecret123 dbname=%s sslmode=disable", dbName)
+	dsn := fmt.Sprintf("host=db port=5432 user=%s password=%s dbname=%s sslmode=disable", username, password, dbName)
 	db, err := sql.Open("postgres", dsn)
 	if err != nil {
 		return fmt.Errorf("gagal terhubung ke database: %w", err)
@@ -101,12 +101,12 @@ func DeleteColumn(dbName, tableName, colName string) error {
 }
 
 // RenameColumn mengubah nama kolom di tabel
-func RenameColumn(dbName, tableName, oldName, newName string) error {
-	if !isValidIdentifier(dbName) || !isValidIdentifier(tableName) || !isValidIdentifier(oldName) || !isValidIdentifier(newName) {
-		return fmt.Errorf("nama database, tabel, atau kolom tidak valid")
+func RenameColumn(dbName, username, password, tableName, oldName, newName string) error {
+	if !isValidIdentifier(dbName) || !isValidIdentifier(tableName) || !isValidIdentifier(oldName) || !isValidIdentifier(newName) || !isValidIdentifier(username) {
+		return fmt.Errorf("nama database, username, tabel, atau kolom tidak valid")
 	}
 
-	dsn := fmt.Sprintf("host=db port=5432 user=superadmin password=supersecret123 dbname=%s sslmode=disable", dbName)
+	dsn := fmt.Sprintf("host=db port=5432 user=%s password=%s dbname=%s sslmode=disable", username, password, dbName)
 	db, err := sql.Open("postgres", dsn)
 	if err != nil {
 		return fmt.Errorf("gagal terhubung ke database: %w", err)
@@ -122,15 +122,15 @@ func RenameColumn(dbName, tableName, oldName, newName string) error {
 }
 
 // AlterColumnType mengubah tipe data kolom di tabel
-func AlterColumnType(dbName, tableName, colName, newType string) error {
-	if !isValidIdentifier(dbName) || !isValidIdentifier(tableName) || !isValidIdentifier(colName) {
-		return fmt.Errorf("nama database, tabel, atau kolom tidak valid")
+func AlterColumnType(dbName, username, password, tableName, colName, newType string) error {
+	if !isValidIdentifier(dbName) || !isValidIdentifier(tableName) || !isValidIdentifier(colName) || !isValidIdentifier(username) {
+		return fmt.Errorf("nama database, username, tabel, atau kolom tidak valid")
 	}
 	if !isValidType(newType) {
 		return fmt.Errorf("tipe data tidak valid")
 	}
 
-	dsn := fmt.Sprintf("host=db port=5432 user=superadmin password=supersecret123 dbname=%s sslmode=disable", dbName)
+	dsn := fmt.Sprintf("host=db port=5432 user=%s password=%s dbname=%s sslmode=disable", username, password, dbName)
 	db, err := sql.Open("postgres", dsn)
 	if err != nil {
 		return fmt.Errorf("gagal terhubung ke database: %w", err)
@@ -147,6 +147,13 @@ func AlterColumnType(dbName, tableName, colName, newType string) error {
 
 // ColumnsHandler mengelola request CRUD kolom
 func ColumnsHandler(w http.ResponseWriter, r *http.Request) {
+	username := r.Header.Get("X-Database-User")
+	password := r.Header.Get("X-Database-Password")
+	if username == "" || password == "" {
+		respondWithError(w, http.StatusUnauthorized, "Autentikasi database diperlukan")
+		return
+	}
+
 	switch r.Method {
 	case http.MethodGet:
 		dbName := r.URL.Query().Get("db_name")
@@ -155,7 +162,7 @@ func ColumnsHandler(w http.ResponseWriter, r *http.Request) {
 			respondWithError(w, http.StatusBadRequest, "Parameter db_name dan table_name wajib disertakan")
 			return
 		}
-		cols, err := ListColumns(dbName, tableName)
+		cols, err := ListColumns(dbName, username, password, tableName)
 		if err != nil {
 			respondWithError(w, http.StatusInternalServerError, err.Error())
 			return
@@ -177,7 +184,7 @@ func ColumnsHandler(w http.ResponseWriter, r *http.Request) {
 			respondWithError(w, http.StatusBadRequest, "Input tidak valid atau ada data yang kosong")
 			return
 		}
-		err = AddColumn(req.DBName, req.TableName, req.ColumnName, req.ColumnType)
+		err = AddColumn(req.DBName, username, password, req.TableName, req.ColumnName, req.ColumnType)
 		if err != nil {
 			respondWithError(w, http.StatusInternalServerError, err.Error())
 			return
@@ -201,14 +208,14 @@ func ColumnsHandler(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		if req.OldName != req.NewName {
-			err = RenameColumn(req.DBName, req.TableName, req.OldName, req.NewName)
+			err = RenameColumn(req.DBName, username, password, req.TableName, req.OldName, req.NewName)
 			if err != nil {
 				respondWithError(w, http.StatusInternalServerError, err.Error())
 				return
 			}
 		}
 		if req.ColumnType != "" {
-			err = AlterColumnType(req.DBName, req.TableName, req.NewName, req.ColumnType)
+			err = AlterColumnType(req.DBName, username, password, req.TableName, req.NewName, req.ColumnType)
 			if err != nil {
 				respondWithError(w, http.StatusInternalServerError, err.Error())
 				return
@@ -227,7 +234,7 @@ func ColumnsHandler(w http.ResponseWriter, r *http.Request) {
 			respondWithError(w, http.StatusBadRequest, "Parameter db_name, table_name, dan column_name wajib disertakan")
 			return
 		}
-		err := DeleteColumn(dbName, tableName, columnName)
+		err := DeleteColumn(dbName, username, password, tableName, columnName)
 		if err != nil {
 			respondWithError(w, http.StatusInternalServerError, err.Error())
 			return

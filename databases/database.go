@@ -23,6 +23,20 @@ func isValidIdentifier(name string) bool {
 	return identifierRegex.MatchString(name)
 }
 
+// VerifyCredentials memverifikasi apakah username dan password cocok untuk mengakses database tertentu
+func VerifyCredentials(dbName, username, password string) error {
+	if !isValidIdentifier(dbName) || !isValidIdentifier(username) {
+		return fmt.Errorf("nama database atau username tidak valid")
+	}
+	dsn := fmt.Sprintf("host=db port=5432 user=%s password=%s dbname=%s sslmode=disable", username, password, dbName)
+	db, err := sql.Open("postgres", dsn)
+	if err != nil {
+		return fmt.Errorf("kredensial database tidak valid atau gagal terhubung: %w", err)
+	}
+	defer db.Close()
+	return db.Ping()
+}
+
 func respondWithJSON(w http.ResponseWriter, status int, payload interface{}) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(status)
@@ -91,6 +105,13 @@ func DatabasesHandler(w http.ResponseWriter, r *http.Request) {
 		})
 
 	case http.MethodPut:
+		username := r.Header.Get("X-Database-User")
+		password := r.Header.Get("X-Database-Password")
+		if username == "" || password == "" {
+			respondWithError(w, http.StatusUnauthorized, "Autentikasi database diperlukan")
+			return
+		}
+
 		var req struct {
 			OldName string `json:"old_name"`
 			NewName string `json:"new_name"`
@@ -100,6 +121,13 @@ func DatabasesHandler(w http.ResponseWriter, r *http.Request) {
 			respondWithError(w, http.StatusBadRequest, "Input tidak valid")
 			return
 		}
+
+		err = VerifyCredentials(req.OldName, username, password)
+		if err != nil {
+			respondWithError(w, http.StatusForbidden, "Autentikasi database gagal: "+err.Error())
+			return
+		}
+
 		err = RenameDatabase(req.OldName, req.NewName)
 		if err != nil {
 			respondWithError(w, http.StatusInternalServerError, err.Error())
@@ -111,12 +139,26 @@ func DatabasesHandler(w http.ResponseWriter, r *http.Request) {
 		})
 
 	case http.MethodDelete:
+		username := r.Header.Get("X-Database-User")
+		password := r.Header.Get("X-Database-Password")
+		if username == "" || password == "" {
+			respondWithError(w, http.StatusUnauthorized, "Autentikasi database diperlukan")
+			return
+		}
+
 		dbName := r.URL.Query().Get("db_name")
 		if dbName == "" {
 			respondWithError(w, http.StatusBadRequest, "Parameter db_name wajib disertakan")
 			return
 		}
-		err := DeleteDatabase(dbName)
+
+		err := VerifyCredentials(dbName, username, password)
+		if err != nil {
+			respondWithError(w, http.StatusForbidden, "Autentikasi database gagal: "+err.Error())
+			return
+		}
+
+		err = DeleteDatabase(dbName)
 		if err != nil {
 			respondWithError(w, http.StatusInternalServerError, err.Error())
 			return

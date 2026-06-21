@@ -152,23 +152,22 @@ onMounted(() => {
     <main class="p-8 space-y-8 max-w-5xl mx-auto">
         <div class="flex items-center justify-between border-b border-white/10 pb-4">
             <h1 class="text-3xl font-bold text-white flex items-center gap-2">
-                <i class="pi pi-cloud text-zinc-400"></i>
-                Sites
+                Static Sites
             </h1>
         </div>
 
         <section class="space-y-4">
-            <p class="text-xl font-semibold text-zinc-300">Create a new site</p>
-            <div class="flex gap-4">
+            <p class="text-xl font-semibold text-zinc-300">Buat website baru</p>
+            <div class="grid sm:flex gap-4">
                 <Button label="Upload Folder (ZIP)" icon="pi pi-upload" @click="showUploadDialog = true" class="px-6" />
-                <Button label="Clone From Github" icon="pi pi-github" severity="secondary" @click="showCloneDialog = true" class="px-6" />
+                <Button label="Clone dari Github" icon="pi pi-github" severity="secondary" @click="showCloneDialog = true" class="px-6" />
             </div>
         </section>
 
         <section class="space-y-4">
-            <p class="text-xl font-semibold text-zinc-300">Guides</p>
-            <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
-                <Button variant="outlined" severity="secondary" class="flex gap-2 items-center justify-center p-4">
+            <p class="text-xl font-semibold text-zinc-300">Panduan</p>
+            <div class="grid sm:grid-cols-2 md:grid-cols-4 gap-4">
+                <Button variant="outlined" severity="secondary" @click="$router.push('/admin/docs')" class="flex gap-2 items-center justify-center p-4">
                     <img src="https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/html5/html5-original.svg"
                         class="size-6" />
                     <span>native html</span>
@@ -177,7 +176,7 @@ onMounted(() => {
         </section>
 
         <section class="space-y-4">
-            <p class="text-xl font-semibold text-zinc-300">All Hosted Sites</p>
+            <p class="text-xl font-semibold text-zinc-300">Semua Website</p>
             <div class="grid gap-4 grid-cols-1 md:grid-cols-2">
                 <div v-if="sitesList.length === 0" class="col-span-full border border-dashed border-white/10 p-8 rounded-lg text-center text-zinc-500">
                     Belum ada static website yang di-host. Silakan clone repo atau upload zip di atas.

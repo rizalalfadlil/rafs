@@ -10,12 +10,12 @@ import (
 )
 
 // ListRows mengembalikan semua baris data dari tabel tertentu
-func ListRows(dbName, tableName string) ([]map[string]interface{}, error) {
-	if !isValidIdentifier(dbName) || !isValidIdentifier(tableName) {
-		return nil, fmt.Errorf("nama database atau tabel tidak valid")
+func ListRows(dbName, username, password, tableName string) ([]map[string]interface{}, error) {
+	if !isValidIdentifier(dbName) || !isValidIdentifier(tableName) || !isValidIdentifier(username) {
+		return nil, fmt.Errorf("nama database, username, atau tabel tidak valid")
 	}
 
-	dsn := fmt.Sprintf("host=db port=5432 user=superadmin password=supersecret123 dbname=%s sslmode=disable", dbName)
+	dsn := fmt.Sprintf("host=db port=5432 user=%s password=%s dbname=%s sslmode=disable", username, password, dbName)
 	db, err := sql.Open("postgres", dsn)
 	if err != nil {
 		return nil, fmt.Errorf("gagal terhubung ke database %s: %w", dbName, err)
@@ -68,9 +68,9 @@ func ListRows(dbName, tableName string) ([]map[string]interface{}, error) {
 }
 
 // InsertRow menyisipkan baris baru ke dalam tabel
-func InsertRow(dbName, tableName string, rowData map[string]interface{}) error {
-	if !isValidIdentifier(dbName) || !isValidIdentifier(tableName) {
-		return fmt.Errorf("nama database atau tabel tidak valid")
+func InsertRow(dbName, username, password, tableName string, rowData map[string]interface{}) error {
+	if !isValidIdentifier(dbName) || !isValidIdentifier(tableName) || !isValidIdentifier(username) {
+		return fmt.Errorf("nama database, username, atau tabel tidak valid")
 	}
 	if len(rowData) == 0 {
 		return fmt.Errorf("data baris tidak boleh kosong")
@@ -90,7 +90,7 @@ func InsertRow(dbName, tableName string, rowData map[string]interface{}) error {
 		i++
 	}
 
-	dsn := fmt.Sprintf("host=db port=5432 user=superadmin password=supersecret123 dbname=%s sslmode=disable", dbName)
+	dsn := fmt.Sprintf("host=db port=5432 user=%s password=%s dbname=%s sslmode=disable", username, password, dbName)
 	db, err := sql.Open("postgres", dsn)
 	if err != nil {
 		return fmt.Errorf("gagal terhubung ke database: %w", err)
@@ -106,9 +106,9 @@ func InsertRow(dbName, tableName string, rowData map[string]interface{}) error {
 }
 
 // UpdateRow memperbarui baris di tabel berdasarkan filter kriteria
-func UpdateRow(dbName, tableName string, whereData, rowData map[string]interface{}) error {
-	if !isValidIdentifier(dbName) || !isValidIdentifier(tableName) {
-		return fmt.Errorf("nama database atau tabel tidak valid")
+func UpdateRow(dbName, username, password, tableName string, whereData, rowData map[string]interface{}) error {
+	if !isValidIdentifier(dbName) || !isValidIdentifier(tableName) || !isValidIdentifier(username) {
+		return fmt.Errorf("nama database, username, atau tabel tidak valid")
 	}
 	if len(rowData) == 0 {
 		return fmt.Errorf("data set tidak boleh kosong")
@@ -138,7 +138,7 @@ func UpdateRow(dbName, tableName string, whereData, rowData map[string]interface
 		i++
 	}
 
-	dsn := fmt.Sprintf("host=db port=5432 user=superadmin password=supersecret123 dbname=%s sslmode=disable", dbName)
+	dsn := fmt.Sprintf("host=db port=5432 user=%s password=%s dbname=%s sslmode=disable", username, password, dbName)
 	db, err := sql.Open("postgres", dsn)
 	if err != nil {
 		return fmt.Errorf("gagal terhubung ke database: %w", err)
@@ -154,9 +154,9 @@ func UpdateRow(dbName, tableName string, whereData, rowData map[string]interface
 }
 
 // DeleteRow menghapus baris dari tabel berdasarkan kriteria filter
-func DeleteRow(dbName, tableName string, whereData map[string]interface{}) error {
-	if !isValidIdentifier(dbName) || !isValidIdentifier(tableName) {
-		return fmt.Errorf("nama database atau tabel tidak valid")
+func DeleteRow(dbName, username, password, tableName string, whereData map[string]interface{}) error {
+	if !isValidIdentifier(dbName) || !isValidIdentifier(tableName) || !isValidIdentifier(username) {
+		return fmt.Errorf("nama database, username, atau tabel tidak valid")
 	}
 	if len(whereData) == 0 {
 		return fmt.Errorf("kriteria hapus (where) tidak boleh kosong")
@@ -174,7 +174,7 @@ func DeleteRow(dbName, tableName string, whereData map[string]interface{}) error
 		i++
 	}
 
-	dsn := fmt.Sprintf("host=db port=5432 user=superadmin password=supersecret123 dbname=%s sslmode=disable", dbName)
+	dsn := fmt.Sprintf("host=db port=5432 user=%s password=%s dbname=%s sslmode=disable", username, password, dbName)
 	db, err := sql.Open("postgres", dsn)
 	if err != nil {
 		return fmt.Errorf("gagal terhubung ke database: %w", err)
@@ -191,6 +191,13 @@ func DeleteRow(dbName, tableName string, whereData map[string]interface{}) error
 
 // RowsHandler mengelola request CRUD baris
 func RowsHandler(w http.ResponseWriter, r *http.Request) {
+	username := r.Header.Get("X-Database-User")
+	password := r.Header.Get("X-Database-Password")
+	if username == "" || password == "" {
+		respondWithError(w, http.StatusUnauthorized, "Autentikasi database diperlukan")
+		return
+	}
+
 	switch r.Method {
 	case http.MethodGet:
 		dbName := r.URL.Query().Get("db_name")
@@ -199,7 +206,7 @@ func RowsHandler(w http.ResponseWriter, r *http.Request) {
 			respondWithError(w, http.StatusBadRequest, "Parameter db_name dan table_name wajib disertakan")
 			return
 		}
-		rows, err := ListRows(dbName, tableName)
+		rows, err := ListRows(dbName, username, password, tableName)
 		if err != nil {
 			respondWithError(w, http.StatusInternalServerError, err.Error())
 			return
@@ -220,7 +227,7 @@ func RowsHandler(w http.ResponseWriter, r *http.Request) {
 			respondWithError(w, http.StatusBadRequest, "Input tidak valid atau data kosong")
 			return
 		}
-		err = InsertRow(req.DBName, req.TableName, req.Row)
+		err = InsertRow(req.DBName, username, password, req.TableName, req.Row)
 		if err != nil {
 			respondWithError(w, http.StatusInternalServerError, err.Error())
 			return
@@ -242,7 +249,7 @@ func RowsHandler(w http.ResponseWriter, r *http.Request) {
 			respondWithError(w, http.StatusBadRequest, "Input tidak valid atau data kosong")
 			return
 		}
-		err = UpdateRow(req.DBName, req.TableName, req.Where, req.Row)
+		err = UpdateRow(req.DBName, username, password, req.TableName, req.Where, req.Row)
 		if err != nil {
 			respondWithError(w, http.StatusInternalServerError, err.Error())
 			return
@@ -263,7 +270,7 @@ func RowsHandler(w http.ResponseWriter, r *http.Request) {
 			respondWithError(w, http.StatusBadRequest, "Input tidak valid atau kriteria kosong")
 			return
 		}
-		err = DeleteRow(req.DBName, req.TableName, req.Where)
+		err = DeleteRow(req.DBName, username, password, req.TableName, req.Where)
 		if err != nil {
 			respondWithError(w, http.StatusInternalServerError, err.Error())
 			return
