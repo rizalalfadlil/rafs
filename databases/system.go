@@ -207,7 +207,7 @@ func getOSName() string {
 }
 
 func getPostgresVersion() string {
-	dsn := "host=db port=5432 user=superadmin password=supersecret123 dbname=postgres sslmode=disable"
+	dsn := getSuperadminDSN()
 	db, err := sql.Open("postgres", dsn)
 	if err != nil {
 		return "PostgreSQL"

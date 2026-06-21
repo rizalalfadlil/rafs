@@ -15,7 +15,7 @@ func ListRows(dbName, username, password, tableName string) ([]map[string]interf
 		return nil, fmt.Errorf("nama database, username, atau tabel tidak valid")
 	}
 
-	dsn := fmt.Sprintf("host=db port=5432 user=%s password=%s dbname=%s sslmode=disable", username, password, dbName)
+	dsn := getDSN(username, password, dbName)
 	db, err := sql.Open("postgres", dsn)
 	if err != nil {
 		return nil, fmt.Errorf("gagal terhubung ke database %s: %w", dbName, err)
@@ -90,7 +90,7 @@ func InsertRow(dbName, username, password, tableName string, rowData map[string]
 		i++
 	}
 
-	dsn := fmt.Sprintf("host=db port=5432 user=%s password=%s dbname=%s sslmode=disable", username, password, dbName)
+	dsn := getDSN(username, password, dbName)
 	db, err := sql.Open("postgres", dsn)
 	if err != nil {
 		return fmt.Errorf("gagal terhubung ke database: %w", err)
@@ -138,7 +138,7 @@ func UpdateRow(dbName, username, password, tableName string, whereData, rowData 
 		i++
 	}
 
-	dsn := fmt.Sprintf("host=db port=5432 user=%s password=%s dbname=%s sslmode=disable", username, password, dbName)
+	dsn := getDSN(username, password, dbName)
 	db, err := sql.Open("postgres", dsn)
 	if err != nil {
 		return fmt.Errorf("gagal terhubung ke database: %w", err)
@@ -174,7 +174,7 @@ func DeleteRow(dbName, username, password, tableName string, whereData map[strin
 		i++
 	}
 
-	dsn := fmt.Sprintf("host=db port=5432 user=%s password=%s dbname=%s sslmode=disable", username, password, dbName)
+	dsn := getDSN(username, password, dbName)
 	db, err := sql.Open("postgres", dsn)
 	if err != nil {
 		return fmt.Errorf("gagal terhubung ke database: %w", err)

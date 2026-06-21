@@ -3,7 +3,6 @@ package databases
 import (
 	"database/sql"
 	"encoding/json"
-	"fmt"
 	"net/http"
 	"strings"
 
@@ -38,7 +37,7 @@ func QueryHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Hubungkan ke database dengan kredensial yang diberikan
-	dsn := fmt.Sprintf("host=db port=5432 user=%s password=%s dbname=%s sslmode=disable", username, password, req.DBName)
+	dsn := getDSN(username, password, req.DBName)
 	db, err := sql.Open("postgres", dsn)
 	if err != nil {
 		respondWithError(w, http.StatusInternalServerError, "Gagal membuka koneksi database: "+err.Error())

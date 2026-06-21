@@ -28,7 +28,7 @@ func VerifyCredentials(dbName, username, password string) error {
 	if !isValidIdentifier(dbName) || !isValidIdentifier(username) {
 		return fmt.Errorf("nama database atau username tidak valid")
 	}
-	dsn := fmt.Sprintf("host=db port=5432 user=%s password=%s dbname=%s sslmode=disable", username, password, dbName)
+	dsn := getDSN(username, password, dbName)
 	db, err := sql.Open("postgres", dsn)
 	if err != nil {
 		return fmt.Errorf("kredensial database tidak valid atau gagal terhubung: %w", err)
@@ -179,7 +179,7 @@ func CreateUserAndDatabase(dbName, username, password string) error {
 	if !isValidIdentifier(dbName) || !isValidIdentifier(username) {
 		return fmt.Errorf("nama database atau username tidak valid")
 	}
-	dsn := "host=db port=5432 user=superadmin password=supersecret123 dbname=postgres sslmode=disable"
+	dsn := getSuperadminDSN()
 	db, err := sql.Open("postgres", dsn)
 	if err != nil {
 		return fmt.Errorf("gagal terhubung ke database induk: %w", err)
@@ -204,7 +204,7 @@ func CreateUserAndDatabase(dbName, username, password string) error {
 
 // ListDatabases mengembalikan daftar database buatan pengguna
 func ListDatabases() ([]string, error) {
-	dsn := "host=db port=5432 user=superadmin password=supersecret123 dbname=postgres sslmode=disable"
+	dsn := getSuperadminDSN()
 	db, err := sql.Open("postgres", dsn)
 	if err != nil {
 		return nil, fmt.Errorf("gagal terhubung ke database induk: %w", err)
@@ -234,7 +234,7 @@ func RenameDatabase(oldName, newName string) error {
 		return fmt.Errorf("nama database tidak valid")
 	}
 
-	dsn := "host=db port=5432 user=superadmin password=supersecret123 dbname=postgres sslmode=disable"
+	dsn := getSuperadminDSN()
 	db, err := sql.Open("postgres", dsn)
 	if err != nil {
 		return fmt.Errorf("gagal terhubung ke database: %w", err)
@@ -255,7 +255,7 @@ func DeleteDatabase(dbName string) error {
 		return fmt.Errorf("nama database tidak valid")
 	}
 
-	dsn := "host=db port=5432 user=superadmin password=supersecret123 dbname=postgres sslmode=disable"
+	dsn := getSuperadminDSN()
 	db, err := sql.Open("postgres", dsn)
 	if err != nil {
 		return fmt.Errorf("gagal terhubung ke database: %w", err)

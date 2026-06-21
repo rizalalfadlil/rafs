@@ -15,7 +15,7 @@ func ListColumns(dbName, username, password, tableName string) ([]map[string]str
 		return nil, fmt.Errorf("nama database, username, atau tabel tidak valid")
 	}
 
-	dsn := fmt.Sprintf("host=db port=5432 user=%s password=%s dbname=%s sslmode=disable", username, password, dbName)
+	dsn := getDSN(username, password, dbName)
 	db, err := sql.Open("postgres", dsn)
 	if err != nil {
 		return nil, fmt.Errorf("gagal terhubung ke database %s: %w", dbName, err)
@@ -64,7 +64,7 @@ func AddColumn(dbName, username, password, tableName, colName, colType string) e
 		return fmt.Errorf("tipe data tidak valid")
 	}
 
-	dsn := fmt.Sprintf("host=db port=5432 user=%s password=%s dbname=%s sslmode=disable", username, password, dbName)
+	dsn := getDSN(username, password, dbName)
 	db, err := sql.Open("postgres", dsn)
 	if err != nil {
 		return fmt.Errorf("gagal terhubung ke database: %w", err)
@@ -85,7 +85,7 @@ func DeleteColumn(dbName, username, password, tableName, colName string) error {
 		return fmt.Errorf("nama database, username, tabel, atau kolom tidak valid")
 	}
 
-	dsn := fmt.Sprintf("host=db port=5432 user=%s password=%s dbname=%s sslmode=disable", username, password, dbName)
+	dsn := getDSN(username, password, dbName)
 	db, err := sql.Open("postgres", dsn)
 	if err != nil {
 		return fmt.Errorf("gagal terhubung ke database: %w", err)
@@ -106,7 +106,7 @@ func RenameColumn(dbName, username, password, tableName, oldName, newName string
 		return fmt.Errorf("nama database, username, tabel, atau kolom tidak valid")
 	}
 
-	dsn := fmt.Sprintf("host=db port=5432 user=%s password=%s dbname=%s sslmode=disable", username, password, dbName)
+	dsn := getDSN(username, password, dbName)
 	db, err := sql.Open("postgres", dsn)
 	if err != nil {
 		return fmt.Errorf("gagal terhubung ke database: %w", err)
@@ -130,7 +130,7 @@ func AlterColumnType(dbName, username, password, tableName, colName, newType str
 		return fmt.Errorf("tipe data tidak valid")
 	}
 
-	dsn := fmt.Sprintf("host=db port=5432 user=%s password=%s dbname=%s sslmode=disable", username, password, dbName)
+	dsn := getDSN(username, password, dbName)
 	db, err := sql.Open("postgres", dsn)
 	if err != nil {
 		return fmt.Errorf("gagal terhubung ke database: %w", err)

@@ -130,7 +130,7 @@ func ListTables(dbName, username, password string) ([]string, error) {
 		return nil, fmt.Errorf("nama database atau username tidak valid")
 	}
 
-	dsn := fmt.Sprintf("host=db port=5432 user=%s password=%s dbname=%s sslmode=disable", username, password, dbName)
+	dsn := getDSN(username, password, dbName)
 	db, err := sql.Open("postgres", dsn)
 	if err != nil {
 		return nil, fmt.Errorf("gagal terhubung ke database %s: %w", dbName, err)
@@ -174,7 +174,7 @@ func CreateTable(dbName, username, password, tableName string, columns []ColumnD
 		colQueries = append(colQueries, fmt.Sprintf("%s %s", col.Name, col.Type))
 	}
 
-	dsn := fmt.Sprintf("host=db port=5432 user=%s password=%s dbname=%s sslmode=disable", username, password, dbName)
+	dsn := getDSN(username, password, dbName)
 	db, err := sql.Open("postgres", dsn)
 	if err != nil {
 		return fmt.Errorf("gagal terhubung ke database: %w", err)
@@ -195,7 +195,7 @@ func RenameTable(dbName, username, password, oldName, newName string) error {
 		return fmt.Errorf("nama database, username, atau tabel tidak valid")
 	}
 
-	dsn := fmt.Sprintf("host=db port=5432 user=%s password=%s dbname=%s sslmode=disable", username, password, dbName)
+	dsn := getDSN(username, password, dbName)
 	db, err := sql.Open("postgres", dsn)
 	if err != nil {
 		return fmt.Errorf("gagal terhubung ke database: %w", err)
@@ -216,7 +216,7 @@ func DeleteTable(dbName, username, password, tableName string) error {
 		return fmt.Errorf("nama database, username, atau tabel tidak valid")
 	}
 
-	dsn := fmt.Sprintf("host=db port=5432 user=%s password=%s dbname=%s sslmode=disable", username, password, dbName)
+	dsn := getDSN(username, password, dbName)
 	db, err := sql.Open("postgres", dsn)
 	if err != nil {
 		return fmt.Errorf("gagal terhubung ke database: %w", err)
